@@ -1,4 +1,6 @@
-import { User } from "../models/user.model";
+import { User } from "../models/user.model.js";
+import { Blog } from "../models/blog.model.js";
+import fs, { fdatasync } from "fs"
 
 const registerUser = async(req, res)=>{
     // steps to register user
@@ -10,42 +12,47 @@ const registerUser = async(req, res)=>{
 
 
 
-    // 1.
-    const {namee, username, email, password} = req.body;
-
-
-    // 2.
-    const existingData = await User.findone(
-        {$or: [{username}, {email}]}
-    )
-
-    if(existingData){ 
-        return res.status(400).send("User already exists!")
+    try {
+        // 1.
+        const {name, userName, email, password} = req.body;
+    
+    
+        // 2.
+        const existingData = await User.findOne(
+            {$or: [{userName}, {email}]}
+        )
+    
+        if(existingData){ 
+            return res.send("User already exists!")
+        }
+    
+    
+    
+        // 3.
+        const userdata = await User.create({
+            name,
+            userName,
+            email,
+            password,
+        })
+    
+    
+        // 4.
+        const createdUser = await User.findById(userdata._id).select("-pasword")
+    
+        if(!createdUser){
+            res.send("User can't created!");
+        }
+    
+        res.send(`User created successfully! \n ${createdUser}`);
+    
+    
+    
+        // 5. redirection can be done in frontend
+    } catch (error) {
+        console.log("Error in registerUser!")
+        res.send(`Error in registerUser! \n ${error}`)
     }
-
-
-
-    // 3.
-    const userdata = await User.create({
-        name,
-        username,
-        email,
-        password,
-    })
-
-
-    // 4.
-    const createdUser = await User.findById(userdata._id).select("-pasword")
-
-    if(!createdUser){
-        res.status(500).send("User can't created!");
-    }
-
-    res.status(200).send("User created successfully! \n", createdUser);
-
-
-
-    // 5. redirection can be done in frontend
 
 }
 
@@ -63,33 +70,129 @@ const loginUser = async(req, res) => {
 
 
 
-    // 1.
-    const {username, email, password} = req.body
-
-
-
-
-
-    // 2. 
-    const userData = await User.findone(
-        {$or: [{username}, {email}]}
-    )
-
-    if(!(userData.username == username || userData.email == email || userData.password == password)){
-        return res.status(400).send("invalid username/email or password")
+    try {
+        // 1.
+        const {userName, email, password} = req.body
+    
+    
+    
+    
+    
+        // 2. 
+        const userData = await User.findOne(
+            {$or: [{userName}, {email}]}
+        )
+    
+        if(!((userData.userName == userName && userData.password == password) || (userData.email == email && userData.password == password))){
+            return res.send("invalid userName/email or password")
+        }
+        
+    
+    
+        // 3.
+        res.send("User login successfully!")
+    
+    
+    
+    
+        // 4. redirection can be done in frontend
+    } catch (error) {
+        console.log("Error in loginUser!")
+        res.send(`Error in registerUser! \n ${error}`)
     }
 
 
-
-    // 3.
-    res.status(200).send("User login successfully!")
+}
 
 
 
 
-    // 4. redirection can be done in frontend
+//steps for add blog
+// 1. multer for local torage
+// 2. cloudinary url
+// 3. save blog in db
+// 4. delete from local storage
 
 
+// 1.
+import multer from "multer";
+
+const storage = multer.diskStorage({
+    destination: function(req, file, cb){
+        cb(null, './uploads')
+    },
+    filename: function(req, file, cb){
+        cb(null, `${Date.now()}-${file.originalname}`)
+    }
+})
+
+const upload = multer({storage: storage})
+
+
+// 2.
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({ 
+    cloud_name: 'dimrihemant27', 
+    api_key: '754366376743151', 
+    api_secret: 'OSudUKDcmX43TWSyNo5066ZqOYM'
+});
+
+
+// 3.
+
+const addBlog = async(req, res) => {
+    // steps in func
+    // 3.1 multer
+    // 3.2 cloudinaty
+    // 3.3 save in db
+    // 3.4 delete local file
+    // 3.5 response
+
+
+    try {
+        // 1.
+        const imageLocalStoragePath = req.file.path;
+    
+    
+        // 2.
+        const uploadResult = await cloudinary.uploader
+        .upload(
+            imageLocalStoragePath, {
+                resource_type: "auto",
+            }
+        )
+        .catch((error) => {
+            console.log(error);
+        });
+    
+    
+        const imageCloudinaryUrl = uploadResult.secure_url;
+    
+    
+        // 3.
+        const {title, content} = req.body;
+    
+        const data = await Blog.create({
+            title: title,
+            image: imageCloudinaryUrl,
+            content: content
+        })
+    
+    
+        // 4.
+        if(data){
+            // fs.unlinkSync(localFilePath)
+        }
+    
+    
+        // 5. 
+        res.send(`Blog createdsucessfully! \n ${data}`)
+    } catch (error) {
+        console.log("Error in create Blog!");
+        res.send(`Error in creating Blog! \n ${error}`)
+    }
+    
 }
 
 
@@ -100,4 +203,4 @@ const loginUser = async(req, res) => {
 
 
 
-export {registerUser, loginUser, }
+export {registerUser, loginUser, addBlog, upload }

@@ -15,7 +15,7 @@ const blogSchema = new mongoose.Schema({
     },
     owner: {
         type: Schema.Types.ObjectId,
-        ref: 'Blog'
+        ref: 'User'
     },
 },{timestamps: true})
 

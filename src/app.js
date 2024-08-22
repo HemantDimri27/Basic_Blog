@@ -12,7 +12,7 @@ app.use(express.urlencoded({extended: false}))
 
 // router
 import router from "./routers/user.router.js"
-// app.use('/blog', router)
+app.use('/blog', router)
 
 
 
