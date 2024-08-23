@@ -17,6 +17,10 @@ app.use('/blog', router)
 
 
 
+// .env
+import dotenv from "dotenv"
+dotenv.config()
+
 
 
 
@@ -28,5 +32,5 @@ app.get('/', (req, res)=>{
     res.send("Server is start successfuly!")
 })
 
-const port = 8000;
+const port = process.env.PORT || 8000;
 app.listen(port, ()=>{console.log(`Surver is connectedd successfully at port : ${port}`);})

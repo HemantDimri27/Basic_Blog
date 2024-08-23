@@ -133,9 +133,9 @@ const upload = multer({storage: storage})
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({ 
-    cloud_name: 'dimrihemant27', 
-    api_key: '754366376743151', 
-    api_secret: 'OSudUKDcmX43TWSyNo5066ZqOYM'
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 
@@ -152,7 +152,7 @@ const addBlog = async(req, res) => {
 
     try {
         // 1.
-        const imageLocalStoragePath = req.file.path;
+        const imageLocalStoragePath = req.file.path;                                     // error
     
     
         // 2.
@@ -199,8 +199,21 @@ const addBlog = async(req, res) => {
 
 
 
+const allBlogs = async(req, res)=>{
+    try {
+        const blogs = await Blog.find({})
+        res.send(blogs)
+    } catch (error) {
+        res.send(`Error in showing blogs! \n ${error}`)
+    }
+}
 
 
 
 
-export {registerUser, loginUser, addBlog, upload }
+
+
+
+
+
+export {registerUser, loginUser, addBlog, upload, allBlogs }
