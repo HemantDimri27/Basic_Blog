@@ -72,7 +72,7 @@ const loginUser = async(req, res) => {
 
     try {
         // 1.
-        const {userName, email, password} = req.body
+        const {email, password} = req.body
     
     
     
@@ -80,10 +80,14 @@ const loginUser = async(req, res) => {
     
         // 2. 
         const userData = await User.findOne(
-            {$or: [{userName}, {email}]}
+            {email}
         )
+
+        if(!userData){
+            return res.send("invalid userName/email or password")
+        }
     
-        if(!((userData.userName == userName && userData.password == password) || (userData.email == email && userData.password == password))){
+        if(!(userData.email == email && userData.password == password)){
             return res.send("invalid userName/email or password")
         }
         
@@ -97,8 +101,8 @@ const loginUser = async(req, res) => {
     
         // 4. redirection can be done in frontend
     } catch (error) {
-        console.log("Error in loginUser!")
-        res.send(`Error in registerUser! \n ${error}`)
+        console.log(`Error in loginUser! \n ${error}`)
+        res.send(`Error in loginUser! \n ${error}`)
     }
 
 
@@ -133,9 +137,9 @@ const upload = multer({storage: storage})
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({ 
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY, 
-  api_secret: process.env.CLOUDINARY_API_SECRET
+    cloud_name: 'dimrihemant27', 
+    api_key: '754366376743151', 
+    api_secret: 'OSudUKDcmX43TWSyNo5066ZqOYM'
 });
 
 
@@ -152,23 +156,35 @@ const addBlog = async(req, res) => {
 
     try {
         // 1.
-        const imageLocalStoragePath = req.file.path;                                     // error
+        const imageLocalStoragePath = req.file.path;                                     
+        console.log("imageLocalStoragePath: ",imageLocalStoragePath);
+
     
     
         // 2.
-        const uploadResult = await cloudinary.uploader
-        .upload(
-            imageLocalStoragePath, {
-                resource_type: "auto",
-            }
-        )
-        .catch((error) => {
-            console.log(error);
-        });
+        let uploadResult;
+        try {
+            uploadResult = await cloudinary.uploader
+            .upload(
+                imageLocalStoragePath, {
+                    resource_type: "auto",
+                }
+            )
+
+            console.log("uploadResult succesfully! : \n", uploadResult);
+        } catch (error) {
+            console.log("uploadResult error: \n", error);
+            return res.send(error)
+        }
+        // .catch((error) => {
+        //     console.log(error);
+        //     return res.send(error)
+        // });
+        console.log("uploadResult: ", uploadResult);
     
     
         const imageCloudinaryUrl = uploadResult.secure_url;
-    
+        console.log("imageCloudinaryUrl:", imageCloudinaryUrl);
     
         // 3.
         const {title, content} = req.body;
@@ -187,7 +203,7 @@ const addBlog = async(req, res) => {
     
     
         // 5. 
-        res.send(`Blog createdsucessfully! \n ${data}`)
+        res.send(`Blog created sucessfully!  \n ${data.title}`)
     } catch (error) {
         console.log("Error in create Blog!");
         res.send(`Error in creating Blog! \n ${error}`)
